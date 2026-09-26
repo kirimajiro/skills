@@ -1,0 +1,5 @@
+# normalize line endings: store LF in the repo, check out LF on every OS
+* text=auto eol=lf
+
+# binaries
+*.png binary
