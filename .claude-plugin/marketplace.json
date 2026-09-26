@@ -1,0 +1,36 @@
+{
+  "name": "kirimajiro-skills",
+  "owner": {
+    "name": "kirimajiro"
+  },
+  "metadata": {
+    "description": "Creative Skills.md Collection",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "qwen-image-2-1",
+      "source": "./skills/qwen-image-2-1",
+      "description": "Create, rewrite, and refine prompts for Qwen-Image-2.1 using affirmative descriptions of the desired result. Use for text-to-image, single-image editing, multi-reference composition, transparent RGBA assets, photography, and anime prompt requests targeting this model. トリガー：「Qwen-Image のプロンプト」「Qwen-Image-2.1 で生成」「透過画像（RGBA）のプロンプト」「複数参照画像で合成」「ComfyUI の LLM ノード用 system prompt」",
+      "version": "1.0.0",
+      "strict": false,
+      "skills": ["./"]
+    },
+    {
+      "name": "krea-2-turbo",
+      "source": "./skills/krea-2-turbo",
+      "description": "Write, expand, and refine text-to-image prompts for Krea 2 Turbo (Krea's open-weights 12B model) as dense natural-language prose with a single committed style direction. Use this whenever the user mentions Krea 2, Krea 2 Turbo, Krea 2 Raw, the krea2 ComfyUI workflow, or wants prompts for an aesthetic-first, style-flexible image model, including exploratory prompting, photography, illustration, painting, and posters with rendered text. Also use it to hand over the lightweight system prompt for a local LLM node. トリガー：「Krea 2 のプロンプト」「Krea 2 Turbo で生成」「krea2 ワークフロー」「画風を探索したい」「ポスターの文字入れ」「ComfyUI の LLM ノード用 system prompt（Krea）」",
+      "version": "1.1.0",
+      "strict": false,
+      "skills": ["./"]
+    },
+    {
+      "name": "flux-2-klein-9b",
+      "source": "./skills/flux-2-klein-9b",
+      "description": "Write, structure, and refine prompts for FLUX.2 [klein] 9B (Black Forest Labs' distilled 4-step model with the Qwen3-8B text encoder), including single-reference and multi-reference editing prompts that address inputs as \"image 1\", \"image 2\". Use this whenever the user mentions FLUX.2, FLUX.2 klein, klein 9B or 4B, the flux2 ComfyUI workflow, or wants prompts for a fast local model that follows structured prose, renders short quoted text, and edits images from up to four references. Also use it to hand over the lightweight system prompts for a local LLM node. トリガー：「FLUX.2 のプロンプト」「FLUX.2 klein で生成」「klein 9B / 4B」「flux2 ワークフロー」「image 1 の服を image 2 に」「複数参照で合成（FLUX）」「ComfyUI の LLM ノード用 system prompt（FLUX）」",
+      "version": "1.1.0",
+      "strict": false,
+      "skills": ["./"]
+    }
+  ]
+}

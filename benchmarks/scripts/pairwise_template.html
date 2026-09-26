@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>pairwise</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #262626; color: #e6e6e6;
+    font-family: "Segoe UI", "Yu Gothic UI", Meiryo, system-ui, sans-serif; font-size: 15px; }
+  body { display: flex; flex-direction: column; }
+  header { padding: 10px 16px 6px; border-bottom: 1px solid #3a3a3a; }
+  .row { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .title { font-weight: 600; font-size: 16px; }
+  .summary { color: #b5b5b5; }
+  .progress { margin-left: auto; color: #9a9a9a; font-variant-numeric: tabular-nums; }
+  .q { margin-top: 6px; font-size: 20px; font-weight: 600; text-align: center; }
+  .q small { font-weight: 400; color: #9a9a9a; font-size: 13px; margin-left: 8px; }
+  #prompt { display: block; margin: 6px 0 0; padding: 6px 8px; max-height: 5.5em; overflow: auto; background: #1e1e1e; color: #c9c9c9;
+    font-size: 13px; white-space: pre-wrap; border-radius: 4px; }
+  main { flex: 1; display: flex; gap: 8px; padding: 8px; min-height: 0; }
+  .pane { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0;
+    background: #1c1c1c; border-radius: 6px; border: 2px solid transparent; position: relative; }
+  .pane img { max-width: 100%; max-height: calc(100vh - 250px); object-fit: contain; cursor: zoom-in; }
+  .pane.pick { border-color: #6aa0ff; }
+  aside { width: 220px; display: none; flex-direction: column; gap: 4px; }
+  aside.on { display: flex; }
+  aside img { width: 100%; object-fit: contain; border-radius: 4px; cursor: zoom-in; }
+  aside .cap { color: #9a9a9a; font-size: 12px; }
+  footer { display: flex; gap: 8px; padding: 8px 16px 12px; border-top: 1px solid #3a3a3a; align-items: center; }
+  button { background: #3a3a3a; color: #eee; border: 1px solid #555; border-radius: 5px;
+    padding: 8px 16px; font-size: 15px; cursor: pointer; }
+  button:hover { background: #4a4a4a; }
+  button.primary { background: #2f5cb0; border-color: #4a78d0; }
+  button.primary:hover { background: #3a6ccc; }
+  button:disabled { opacity: .4; cursor: default; }
+  .spacer { flex: 1; }
+  .hint { color: #8a8a8a; font-size: 13px; }
+  #lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.92); z-index: 9;
+    align-items: center; justify-content: center; cursor: zoom-out; }
+  #lightbox.on { display: flex; }
+  #lightbox img { max-width: 100vw; max-height: 100vh; }
+  /* final screen */
+  #final { display: none; padding: 16px 24px 40px; overflow: auto; }
+  #final h2 { margin: 18px 0 8px; font-size: 18px; }
+  table { border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { border: 1px solid #444; padding: 4px 10px; text-align: left; }
+  th { background: #303030; font-weight: 600; }
+  td.num { text-align: right; }
+  .bar { display: inline-block; height: 10px; background: #6aa0ff; vertical-align: middle; }
+  .low { color: #9a9a9a; }
+  textarea { width: 100%; max-width: 900px; min-height: 60px; background: #1e1e1e; color: #e6e6e6;
+    border: 1px solid #555; border-radius: 4px; padding: 6px; font: inherit; }
+  .aspectnote { margin: 6px 0; }
+  .aspectnote label { display: block; color: #b5b5b5; margin-bottom: 2px; }
+  .sym { font-family: monospace; letter-spacing: 2px; }
+  .gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(520px, 1fr)); gap: 10px; max-width: 1700px; }
+  .gal-item { background: #1c1c1c; border-radius: 6px; padding: 8px; }
+  .gal-head { display: flex; gap: 10px; align-items: baseline; margin-bottom: 6px; }
+  .gal-head .t { font-weight: 600; }
+  .gal-pair { display: flex; gap: 6px; }
+  .gal-pair figure { flex: 1; margin: 0; min-width: 0; }
+  .gal-pair img { width: 100%; max-height: 320px; object-fit: contain; background: #111; cursor: zoom-in; border-radius: 4px; }
+  .gal-pair figcaption { color: #9a9a9a; font-size: 12px; margin-top: 2px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="row">
+    <span class="title" id="h-title"></span>
+    <span class="summary" id="h-summary"></span>
+    <span class="progress" id="h-progress"></span>
+  </div>
+  <div class="q" id="h-q"></div>
+  <pre id="prompt"></pre>
+</header>
+<main id="main">
+  <div class="pane" id="left"><img id="img-left" alt="left"></div>
+  <div class="pane" id="right"><img id="img-right" alt="right"></div>
+  <aside id="aside"><div class="cap">基準モデル（参考）</div><img id="img-base" alt="baseline"></aside>
+</main>
+<footer id="footer">
+  <button id="b-left">← 左</button>
+  <button id="b-tie">引き分け (Space)</button>
+  <button id="b-right">右 →</button>
+  <span class="spacer"></span>
+  <button id="b-base" style="display:none">基準を隠す</button>
+  <button id="b-back">戻る (Backspace)</button>
+  <span class="hint">クリックで拡大</span>
+</footer>
+<section id="final"></section>
+<div id="lightbox"><img id="img-zoom" alt="zoom"></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const KEY = "pairwise:" + DATA.session.id;
+
+// flatten items x questions into a fixed question order
+const Q = [];
+DATA.items.forEach((it, ii) => it.questions.forEach((q, qi) => Q.push({ ii, qi, it, q })));
+
+let state = { answers: [], notes: { overall: "", by_aspect: {} }, baseline: DATA.session.baseline_shown };
+try { const s = localStorage.getItem(KEY); if (s) state = Object.assign(state, JSON.parse(s)); } catch (e) {}
+let shownAt = Date.now();
+
+const $ = id => document.getElementById(id);
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+function render() {
+  const i = state.answers.length;
+  if (i >= Q.length) return renderFinal();
+  $("final").style.display = "none";
+  $("main").style.display = "flex"; $("footer").style.display = "flex";
+  const { it, q, qi } = Q[i];
+  $("h-title").textContent = it.problem + " " + it.title + (it.style ? " [" + it.style + "]" : "");
+  $("h-summary").textContent = it.summary;
+  $("h-progress").textContent = (i + 1) + " / " + Q.length;
+  $("h-q").innerHTML = esc(q.q) + "<small>" + esc(DATA.aspects[q.aspect] || q.aspect) + " · 設問 " + (qi + 1) + "/" + it.questions.length + "</small>";
+  $("prompt").textContent = it.prompt;
+  if ($("img-left").getAttribute("src") !== it.left.img) $("img-left").src = it.left.img;
+  if ($("img-right").getAttribute("src") !== it.right.img) $("img-right").src = it.right.img;
+  const hasBase = !!it.baseline;
+  $("b-base").style.display = hasBase ? "" : "none";
+  $("aside").classList.toggle("on", hasBase && state.baseline);
+  $("b-base").textContent = state.baseline ? "基準を隠す" : "基準を表示";
+  if (hasBase) $("img-base").src = it.baseline;
+  $("b-back").disabled = i === 0;
+  shownAt = Date.now();
+}
+
+function answer(choice) {
+  const i = state.answers.length;
+  if (i >= Q.length) return;
+  const { it, q } = Q[i];
+  state.answers.push({ problem: it.problem, style: it.style, aspect: q.aspect, q: q.q,
+    left: it.left.side, right: it.right.side, choice, ms: Date.now() - shownAt });
+  save();
+  const pane = choice === "left" ? $("left") : choice === "right" ? $("right") : null;
+  if (pane) { pane.classList.add("pick"); setTimeout(() => pane.classList.remove("pick"), 120); }
+  render();
+}
+function back() { if (state.answers.length) { state.answers.pop(); save(); render(); } }
+
+// ---------- final ----------
+function aWin(a) { return a.choice === "tie" ? 0.5 : (a[a.choice] === "a" ? 1 : 0); }
+function renderFinal() {
+  $("main").style.display = "none"; $("footer").style.display = "none";
+  const f = $("final"); f.style.display = "block";
+  const A = DATA.session.a, B = DATA.session.b;
+  const byAspect = {};
+  state.answers.forEach(a => {
+    const s = byAspect[a.aspect] || (byAspect[a.aspect] = { w: 0, t: 0, l: 0 });
+    const v = aWin(a); if (v === 1) s.w++; else if (v === 0) s.l++; else s.t++;
+  });
+  let html = "<h2>集計 — " + esc(DATA.session.id) + "</h2>";
+  html += "<p>A = <b>" + esc(A.model) + "</b> (" + esc(A.variant) + ")　B = <b>" + esc(B.model) + "</b> (" + esc(B.variant) + ")　" +
+    state.answers.length + " 問</p>";
+  html += "<table><tr><th>観点</th><th>A の勝率</th><th></th><th>勝</th><th>分</th><th>負</th><th>n</th></tr>";
+  const order = Object.keys(DATA.aspects).filter(k => byAspect[k]);
+  order.forEach(k => {
+    const s = byAspect[k], n = s.w + s.t + s.l, r = (s.w + 0.5 * s.t) / n;
+    html += "<tr" + (n < 3 ? ' class="low"' : "") + "><td>" + esc(k) + " " + esc(DATA.aspects[k]) + "</td><td class=num>" + r.toFixed(2) +
+      "</td><td><span class=bar style='width:" + Math.round(r * 120) + "px'></span></td><td class=num>" + s.w + "</td><td class=num>" + s.t +
+      "</td><td class=num>" + s.l + "</td><td class=num>" + n + (n < 3 ? " *" : "") + "</td></tr>";
+  });
+  html += "</table><p class=hint>引き分けは 0.5 勝。* は n が 3 未満</p>";
+
+  html += "<h2>問題用紙別（○ A が勝ち / △ 引き分け / × B が勝ち）</h2><p class=hint>雑感を書く前に見返す用。クリックで拡大</p><div class=gal>";
+  const byProb = new Map();
+  state.answers.forEach(a => {
+    const key = a.problem + (a.style ? " [" + a.style + "]" : "");
+    if (!byProb.has(key)) byProb.set(key, []);
+    const v = aWin(a);
+    byProb.get(key).push((v === 1 ? "○" : v === 0 ? "×" : "△") + a.aspect);
+  });
+  const label = side => (side === "a" ? "A " + A.model + " (" + A.variant + ")" : "B " + B.model + " (" + B.variant + ")");
+  DATA.items.forEach(it => {
+    const key = it.problem + (it.style ? " [" + it.style + "]" : "");
+    if (!byProb.has(key)) return;
+    html += "<div class=gal-item><div class=gal-head><span class=t>" + esc(key) + " " + esc(it.title) + "</span><span class=sym>" + esc(byProb.get(key).join("  ")) + "</span></div><div class=gal-pair>" +
+      "<figure><img loading=lazy src='" + esc(it.left.img) + "' data-zoom><figcaption>" + esc(label(it.left.side)) + "</figcaption></figure>" +
+      "<figure><img loading=lazy src='" + esc(it.right.img) + "' data-zoom><figcaption>" + esc(label(it.right.side)) + "</figcaption></figure></div></div>";
+  });
+  html += "</div>";
+
+  html += "<h2>雑感</h2><p class=hint>全体の印象を 1 つ、観点ごとは任意。書いた内容は JSON に入る</p>";
+  html += "<textarea id='n-overall' placeholder='全体の雑感'>" + esc(state.notes.overall || "") + "</textarea>";
+  order.forEach(k => {
+    html += "<div class=aspectnote><label>" + esc(k) + " " + esc(DATA.aspects[k]) + "</label><textarea data-aspect='" + esc(k) + "' placeholder='任意'>" +
+      esc((state.notes.by_aspect || {})[k] || "") + "</textarea></div>";
+  });
+  html += "<p><button class=primary id='b-dl'>JSON をダウンロード</button> <button id='b-fix'>直前の回答を修正</button> " +
+    "<button id='b-reset'>最初からやり直す</button> <span class=hint id='reset-hint'></span></p>";
+  f.innerHTML = html;
+
+  f.querySelectorAll("textarea").forEach(t => t.addEventListener("input", () => {
+    if (t.id === "n-overall") state.notes.overall = t.value;
+    else (state.notes.by_aspect || (state.notes.by_aspect = {}))[t.dataset.aspect] = t.value;
+    save();
+  }));
+  f.querySelectorAll("img[data-zoom]").forEach(im => im.addEventListener("click", () => zoom(im.src)));
+  $("b-dl").onclick = download;
+  $("b-fix").onclick = back;
+  let armed = false;
+  $("b-reset").onclick = () => {
+    if (!armed) { armed = true; $("reset-hint").textContent = "もう一度押すと全回答を消す"; setTimeout(() => { armed = false; $("reset-hint").textContent = ""; }, 3000); return; }
+    state.answers = []; state.notes = { overall: "", by_aspect: {} }; save(); render();
+  };
+}
+
+function localIso() { const d = new Date(), p = n => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + "T" + p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds()); }
+
+function download() {
+  const by = {};
+  Object.entries(state.notes.by_aspect || {}).forEach(([k, v]) => { if (v && v.trim()) by[k] = v; });
+  const out = {
+    session: Object.assign({}, DATA.session, { finished: localIso() }),
+    answers: state.answers,
+    notes: { overall: state.notes.overall || "", by_aspect: by },
+  };
+  const blob = new Blob([JSON.stringify(out, null, 1)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = DATA.session.id + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+// ---------- wiring ----------
+$("b-left").onclick = () => answer("left");
+$("b-right").onclick = () => answer("right");
+$("b-tie").onclick = () => answer("tie");
+$("b-back").onclick = back;
+$("b-base").onclick = () => { state.baseline = !state.baseline; save(); render(); };
+function zoom(src) { $("img-zoom").src = src; $("lightbox").classList.add("on"); }
+$("img-left").onclick = e => zoom(e.target.src);
+$("img-right").onclick = e => zoom(e.target.src);
+$("img-base").onclick = e => zoom(e.target.src);
+$("lightbox").onclick = () => $("lightbox").classList.remove("on");
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "TEXTAREA") return;
+  if ($("lightbox").classList.contains("on")) { if (e.key === "Escape" || e.key === " ") { $("lightbox").classList.remove("on"); e.preventDefault(); } return; }
+  if (state.answers.length >= Q.length) { if (e.key === "Backspace") back(); return; }
+  if (e.key === "ArrowLeft") answer("left");
+  else if (e.key === "ArrowRight") answer("right");
+  else if (e.key === " ") { e.preventDefault(); answer("tie"); }
+  else if (e.key === "Backspace") { e.preventDefault(); back(); }
+});
+render();
+</script>
+</body>
+</html>

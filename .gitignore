@@ -1,0 +1,14 @@
+# generated images, pairwise sessions, exported workflows (kept local)
+benchmarks/_local/
+# soft-delete area
+.trash/
+# dotenvx: private key, and the encrypted .env (owner-only; benchmarks/scripts/run_gptimg.py reads it)
+.env.keys
+.env
+# personal Claude Code settings (enabled plugins etc.)
+.claude/settings.local.json
+# derived from MiniMax's official h3-prompt-writing skill; its Community License restricts redistribution, so local only
+skills/minimax-h3/
+# python
+__pycache__/
+*.pyc
